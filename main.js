@@ -1,7 +1,7 @@
 import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {loadData} from "./data.js"
-import {initTileMap, TileMap} from "../Furca/src/tile_map.js"
-import {apsk, defaultCanvas} from "../Furca/src/system.js"
+import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
+import {Align, apsk, defaultCanvas, defaultFontSize} from "../Furca/src/system.js"
 import {clamp, rndi} from "../Furca/src/functions.js"
 import {keys} from "../Furca/src/key.js"
 import {moveDown, moveLeft, moveRight, turnClockwise, turnCounterclockwise} from "./keys.js"
@@ -9,6 +9,31 @@ import {turnTileMapClockwise, turnTileMapCounterclockwise} from "../Furca/src/ti
 import {enframe} from "../Furca/src/auto_tiling.js"
 import {Action} from "../Furca/src/actions/action.js"
 import {Layer} from "../Furca/src/layer.js"
+import {Label} from "../Furca/src/gui/label.js"
+import {Num} from "../Furca/src/variable/number.js"
+import {Box} from "../Furca/src/box.js"
+
+function shiftRow(row, dRow) {
+    for(let column = 1; column <= 10; column++) {
+        field.setTileByPos(column, row, field.tileByPos(column, row - dRow))
+    }
+}
+
+function checkLines() {
+    let row = 22, dRow = 0, bonus = 0
+    main: while(row >= 0) {
+        shiftRow(row, dRow)
+        for(let column = 1; column <= 10; column++) {
+            if(field.tileByPos(column, row) === emptyTile) {
+                row--
+                continue main
+            }
+        }
+        bonus += 100
+        score.value += bonus
+        dRow++
+    }
+}
 
 class Delayed extends Action {
     time
@@ -28,6 +53,7 @@ class Delayed extends Action {
         this.time = this.duration
         if(collision(0, 1, shapePos)) {
             shape.pasteTo(field, shapeColumn, shapeRow)
+            checkLines()
             newShape()
             return
         }
@@ -42,7 +68,7 @@ project.getAssets = () => {
     }
 }
 
-let field, shape, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor
+let field, shape, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor, score = new Num(), scoreLabel
 const shapesQuantity = [2, 4, 2, 2, 4, 4, 1]
 
 function collision(dColumn, dRow, pos) {
@@ -78,6 +104,8 @@ function initShape(newPos) {
 }
 
 project.init = () => {
+    scoreLabel = new Label(new Box(0, 0, 12, 22), [score], defaultFontSize, Align.center, Align.top)
+
     loadData()
     initTileMap()
 
@@ -88,7 +116,7 @@ project.init = () => {
     field.setPosition(0, -1)
     newShape()
 
-    project.scene.add(field, shape)
+    project.scene.add(field, shape, scoreLabel)
 
     const movementHandler = new Delayed(0.5)
 
