@@ -12,25 +12,7 @@ export function loadData() {
         1, 1, 1, 1,
         1, 1, 1, 1,
         1, 1, 1, 1,
-        2, 2, 2, 2,
-        2, 2, 2, 2,
-        2, 2, 2, 2,
-        2, 2, 1, 1,
-        2, 2, 2, 2,
-        2, 2, 2, 2,
-        2, 2, 2, 1,
-        2, 2, 2, 1,
-        0, 0, 0, 0,
-        0, 0, 0, 1,
-    ], [
-        new Block(0, 4, 2, 1, 0), new Block(2, 4, 2, 1, 0),
-        new Block(2, 5, 2, 1, 0), new Block(0, 5, 2, 1, 0),
-        new Block(0, 6, 2, 1, 0), new Block(2, 6, 2, 1, 0),
-        new Block(0, 7, 2, 1, 0), new Block(0, 8, 1, 2, 0),
-        new Block(1, 8, 1, 2, 0), new Block(2, 8, 1, 2, 0),
-        new Block(3, 8, 1, 2, 0), new Block(2, 10, 1, 2, 0),
-        new Block(1, 10, 1, 2, 0), new Block(0, 10, 1, 2, 0),
-    ], [
+    ], [], [
         new Category("blocks", [
             new Rule(3, [new Pos(0, 1), new Pos(1, 0), new Pos(0, -1), new Pos(-1, 0), ]),
             new Rule(0, [new Pos(0, 1), new Pos(-1, 0), new Pos(0, -1), ]),

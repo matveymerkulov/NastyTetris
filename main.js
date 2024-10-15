@@ -10,10 +10,6 @@ import {enframe} from "../Furca/src/auto_tiling.js"
 import {Action} from "../Furca/src/actions/action.js"
 import {Layer} from "../Furca/src/layer.js"
 
-function collision(dColumn, dRow) {
-    return field.collidesWithTileMap(shapeMap, shapeColumn + dColumn, shapeRow + dRow)
-}
-
 class Delayed extends Action {
     time
     #startingTime
@@ -30,7 +26,7 @@ class Delayed extends Action {
         if(currentTime > time + this.duration) {
             this.#startingTime = time
 
-            if(collision(0, 1)) {
+            if(collision(0, 1, shapePos)) {
                 shapeMap.pasteTo(field, shapeColumn, shapeRow)
                 newShape()
                 return
@@ -47,21 +43,32 @@ project.getAssets = () => {
     }
 }
 
-let field, shapeMap, shapes, shapeNum, shapePosNum, shapeColumn, shapeRow, shapeColor
+let field, shapeMap, shapes, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor
 const shapesQuantity = [2, 4, 2, 2, 4, 4, 1]
+
+function collision(dColumn, dRow, pos) {
+    return field.collidesWithTileMap(getShape(pos), shapeColumn + dColumn, shapeRow + dRow)
+}
 
 function newShape() {
     shapeNum = rndi(7)
-    shapePosNum = 0
+    shapePos = 0
     shapeColumn = 4
     shapeRow = 0
     shapeColor = 16 * (rndi(5) + 1)
-    initShape()
+    initShape(0)
 }
 
-function initShape() {
+function getShape(pos) {
+    return tileMap[`shape${shapeNum}_${pos}`]
+}
+
+function initShape(newPos) {
+    let newShape = getShape(newPos)
+    if(collision(0, 0, newPos)) return
+    shapePos = newPos
     shapeMap.clear()
-    tileMap[`shape${shapeNum}_${shapePosNum}`].pasteTo(shapeMap)
+    newShape.pasteTo(shapeMap)
     shapeMap.shiftTiles(shapeColor)
 }
 
@@ -86,8 +93,7 @@ project.init = () => {
 
         function changeAngle(d) {
             const quantity = shapesQuantity[shapeNum]
-            shapePosNum = (quantity + shapePosNum + d) % quantity
-            initShape()
+            initShape((quantity + shapePos + d) % quantity)
         }
 
         if(turnClockwise.wasPressed) {
@@ -98,10 +104,10 @@ project.init = () => {
         }
 
         if(moveLeft.wasPressed) {
-            if(!collision(-1, 0)) shapeColumn--
+            if(!collision(-1, 0, shapePos)) shapeColumn--
         }
         if(moveRight.wasPressed) {
-            if(!collision(1, 0)) shapeColumn++
+            if(!collision(1, 0, shapePos)) shapeColumn++
         }
     }
 }
