@@ -2,7 +2,7 @@ import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {loadData} from "./data.js"
 import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
 import {Align, apsk, defaultCanvas, defaultFontSize} from "../Furca/src/system.js"
-import {clamp, rndi} from "../Furca/src/functions.js"
+import {clamp, floor, rndi} from "../Furca/src/functions.js"
 import {keys} from "../Furca/src/key.js"
 import {moveDown, moveLeft, moveRight, turnClockwise, turnCounterclockwise} from "./keys.js"
 import {turnTileMapClockwise, turnTileMapCounterclockwise} from "../Furca/src/tile_map_transform.js"
@@ -19,6 +19,20 @@ function shiftRow(row, dRow) {
     }
 }
 
+const topTransform =    {8: 4, 9: 5, 10: 6, 11 : 7, 12: 0, 13: 1, 14: 2, 15: 3}
+const bottomTransform = {4: 0, 5: 1, 6: 2, 7: 3, 8: 12, 9: 13, 10: 14, 11: 15}
+
+function processRow(row, transform) {
+    for(let column = 1; column <= 10; column++) {
+        const tile = field.tileByPos(column, row)
+        const baseTile = tile % 16
+        const tileShift = floor(tile / 16)
+        const newTile = transform[baseTile]
+        if(newTile === undefined) continue
+        field.setTileByPos(column, row, newTile + tileShift * 16)
+    }
+}
+
 function checkLines() {
     let row = 22, dRow = 0, bonus = 0
     main: while(row >= 0) {
@@ -29,6 +43,8 @@ function checkLines() {
                 continue main
             }
         }
+        processRow(row - 1, bottomTransform)
+        processRow(row + 1, topTransform)
         bonus += 100
         score.value += bonus
         dRow++
@@ -104,7 +120,8 @@ function initShape(newPos) {
 }
 
 project.init = () => {
-    scoreLabel = new Label(new Box(0, 0, 12, 22), [score], defaultFontSize, Align.center, Align.top)
+    scoreLabel = new Label(new Box(0, 0, 12, 20), ["SCORE: ", score]
+        , defaultFontSize, Align.center, Align.top)
 
     loadData()
     initTileMap()
