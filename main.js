@@ -42,12 +42,12 @@ class Delayed extends Action {
 
 project.getAssets = () => {
     return {
-        texture: ["bricks.png"],
+        texture: ["blocks.png"],
         sound: [],
     }
 }
 
-let field, shapeMap, shapes, shapeNum, shapePosNum, shapeColumn, shapeRow
+let field, shapeMap, shapes, shapeNum, shapePosNum, shapeColumn, shapeRow, shapeColor
 const shapesQuantity = [2, 4, 2, 2, 4, 4, 1]
 
 function newShape() {
@@ -55,12 +55,14 @@ function newShape() {
     shapePosNum = 0
     shapeColumn = 4
     shapeRow = 0
+    shapeColor = 16 * (rndi(5) + 1)
     initShape()
 }
 
 function initShape() {
     shapeMap.clear()
     tileMap[`shape${shapeNum}_${shapePosNum}`].pasteTo(shapeMap)
+    shapeMap.shiftTiles(shapeColor)
 }
 
 project.init = () => {
