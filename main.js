@@ -1,10 +1,10 @@
 import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {loadData} from "./data.js"
 import {initTileMap, TileMap} from "../Furca/src/tile_map.js"
-import {defaultCanvas} from "../Furca/src/system.js"
+import {apsk, defaultCanvas} from "../Furca/src/system.js"
 import {clamp, rndi} from "../Furca/src/functions.js"
 import {keys} from "../Furca/src/key.js"
-import {moveLeft, moveRight, turnClockwise, turnCounterclockwise} from "./keys.js"
+import {moveDown, moveLeft, moveRight, turnClockwise, turnCounterclockwise} from "./keys.js"
 import {turnTileMapClockwise, turnTileMapCounterclockwise} from "../Furca/src/tile_map_transform.js"
 import {enframe} from "../Furca/src/auto_tiling.js"
 import {Action} from "../Furca/src/actions/action.js"
@@ -12,27 +12,26 @@ import {Layer} from "../Furca/src/layer.js"
 
 class Delayed extends Action {
     time
-    #startingTime
-    duration = 200
+    duration
 
-    constructor() {
+    constructor(duration) {
         super()
-        this.#startingTime = new Date().getTime()
+        this.duration = duration
+        this.time = duration
     }
 
     execute() {
-        const time = this.#startingTime + this.duration
-        const currentTime = new Date().getTime()
-        if(currentTime > time + this.duration) {
-            this.#startingTime = time
-
-            if(collision(0, 1, shapePos)) {
-                shapeMap.pasteTo(field, shapeColumn, shapeRow)
-                newShape()
-                return
-            }
-            shapeRow++
+        if(this.time > 0) {
+            this.time -= apsk
+            return
         }
+        this.time = this.duration
+        if(collision(0, 1, shapePos)) {
+            shape.pasteTo(field, shapeColumn, shapeRow)
+            newShape()
+            return
+        }
+        shapeRow++
     }
 }
 
@@ -43,7 +42,7 @@ project.getAssets = () => {
     }
 }
 
-let field, shapeMap, shapes, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor
+let field, shape, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor
 const shapesQuantity = [2, 4, 2, 2, 4, 4, 1]
 
 function collision(dColumn, dRow, pos) {
@@ -53,9 +52,15 @@ function collision(dColumn, dRow, pos) {
 function newShape() {
     shapeNum = rndi(7)
     shapePos = 0
-    shapeColumn = 4
+    shapeColumn = 5
     shapeRow = 0
     shapeColor = 16 * (rndi(5) + 1)
+    if(collision(0, 0, 0)) {
+        alert("GAME OVER!")
+        field.clear()
+        tileMap.field.pasteTo(field)
+        return
+    }
     initShape(0)
 }
 
@@ -67,40 +72,40 @@ function initShape(newPos) {
     let newShape = getShape(newPos)
     if(collision(0, 0, newPos)) return
     shapePos = newPos
-    shapeMap.clear()
-    newShape.pasteTo(shapeMap)
-    shapeMap.shiftTiles(shapeColor)
+    shape.clear()
+    newShape.pasteTo(shape)
+    shape.shiftTiles(shapeColor)
 }
 
 project.init = () => {
     loadData()
     initTileMap()
 
-    shapeMap = new TileMap(tileSet.blocks, 4, 4)
+    shape = new TileMap(tileSet.blocks, 4, 4)
 
     defaultCanvas(12, 22)
     field = tileMap.field.copy()
     field.setPosition(0, -1)
     newShape()
 
-    project.scene.add(field, shapeMap)
+    project.scene.add(field, shape)
 
-    const movementHandler = new Delayed()
+    const movementHandler = new Delayed(0.5)
 
     project.update = () => {
         movementHandler.execute()
-        shapeMap.setCorner(field.left + shapeColumn, field.top + shapeRow)
+        shape.setCorner(field.left + shapeColumn, field.top + shapeRow)
 
-        function changeAngle(d) {
+        function turn(d) {
             const quantity = shapesQuantity[shapeNum]
             initShape((quantity + shapePos + d) % quantity)
         }
 
         if(turnClockwise.wasPressed) {
-            changeAngle(1)
+            turn(1)
         }
         if(turnCounterclockwise.wasPressed) {
-            changeAngle(-1)
+            turn(-1)
         }
 
         if(moveLeft.wasPressed) {
@@ -108,6 +113,13 @@ project.init = () => {
         }
         if(moveRight.wasPressed) {
             if(!collision(1, 0, shapePos)) shapeColumn++
+        }
+
+        if(moveDown.isDown) {
+            if(movementHandler.duration !== 0.1) movementHandler.time = 0
+            movementHandler.duration = 0.1
+        } else {
+            movementHandler.duration = 0.5
         }
     }
 }
