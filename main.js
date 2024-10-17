@@ -40,6 +40,7 @@ export function newShape() {
         alert("GAME OVER!")
         field.clear()
         tileMap.field.pasteTo(field)
+        score.value = 0
         return
     }
     initShape(0)
