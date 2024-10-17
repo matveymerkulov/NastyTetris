@@ -4,7 +4,7 @@ import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
 import {Align, apsk, defaultCanvas, defaultFontSize} from "../Furca/src/system.js"
 import {clamp, floor, rndi} from "../Furca/src/functions.js"
 import {keys} from "../Furca/src/key.js"
-import {moveDown, moveLeft, moveRight, turnClockwise, turnCounterclockwise} from "./keys.js"
+import {moveDown, moveLeft, moveRight, pause, turnClockwise, turnCounterclockwise} from "./keys.js"
 import {turnTileMapClockwise, turnTileMapCounterclockwise} from "../Furca/src/tile_map_transform.js"
 import {enframe} from "../Furca/src/auto_tiling.js"
 import {Action} from "../Furca/src/actions/action.js"
@@ -23,7 +23,7 @@ project.getAssets = () => {
     }
 }
 
-export let field, shape, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor, score = new Num(), scoreLabel
+export let field, shape, shapeNum, shapePos, shapeColumn, shapeRow, shapeColor, score = new Num()
 export const shapesQuantity = [2, 4, 2, 2, 4, 4, 1]
 
 export function collision(dColumn, dRow, pos) {
@@ -63,8 +63,11 @@ export function incrementRow() {
 }
 
 project.init = () => {
-    scoreLabel = new Label(new Box(0, 0, 12, 20), ["SCORE: ", score]
+    const scoreLabel = new Label(new Box(0, 0, 12, 20), ["SCORE: ", score]
         , defaultFontSize, Align.center, Align.top)
+    const pauseLabel = new Label(new Box(0, 0, 12, 20), ["PAUSED"]
+        , defaultFontSize, Align.center, Align.center)
+    pauseLabel.visible = false
 
     loadData()
     initTileMap()
@@ -76,38 +79,47 @@ project.init = () => {
     field.setPosition(0, -1)
     newShape()
 
-    project.scene.add(field, shape, scoreLabel)
+    project.scene.add(field, shape, scoreLabel, pauseLabel)
 
     const movementHandler = new Delayed(0.5)
 
+    let paused = false
+
     project.update = () => {
-        movementHandler.execute()
-        shape.setCorner(field.left + shapeColumn, field.top + shapeRow)
+        if(!paused) {
+            function turn(d) {
+                const quantity = shapesQuantity[shapeNum]
+                initShape((quantity + shapePos + d) % quantity)
+            }
 
-        function turn(d) {
-            const quantity = shapesQuantity[shapeNum]
-            initShape((quantity + shapePos + d) % quantity)
+            movementHandler.execute()
+            shape.setCorner(field.left + shapeColumn, field.top + shapeRow)
+
+            if(turnClockwise.wasPressed) {
+                turn(1)
+            }
+            if(turnCounterclockwise.wasPressed) {
+                turn(-1)
+            }
+
+            if(moveLeft.wasPressed) {
+                if(!collision(-1, 0, shapePos)) shapeColumn--
+            }
+            if(moveRight.wasPressed) {
+                if(!collision(1, 0, shapePos)) shapeColumn++
+            }
+
+            if(moveDown.isDown) {
+                if(movementHandler.duration !== 0.1) movementHandler.time = 0
+                movementHandler.duration = 0.1
+            } else {
+                movementHandler.duration = 0.5
+            }
         }
 
-        if(turnClockwise.wasPressed) {
-            turn(1)
-        }
-        if(turnCounterclockwise.wasPressed) {
-            turn(-1)
-        }
-
-        if(moveLeft.wasPressed) {
-            if(!collision(-1, 0, shapePos)) shapeColumn--
-        }
-        if(moveRight.wasPressed) {
-            if(!collision(1, 0, shapePos)) shapeColumn++
-        }
-
-        if(moveDown.isDown) {
-            if(movementHandler.duration !== 0.1) movementHandler.time = 0
-            movementHandler.duration = 0.1
-        } else {
-            movementHandler.duration = 0.5
+        if(pause.wasPressed) {
+            paused = !paused
+            pauseLabel.visible = paused
         }
     }
 }

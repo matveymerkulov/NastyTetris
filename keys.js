@@ -7,3 +7,5 @@ export const moveDown = new Key("ArrowDown")
 
 export const turnClockwise = new Key("KeyE")
 export const turnCounterclockwise = new Key("KeyQ")
+
+export const pause = new Key("Space")
