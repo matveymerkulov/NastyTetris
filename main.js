@@ -1,7 +1,7 @@
 import {project, tileMap, tileSet} from "../Furca/src/project.js"
 import {loadData} from "./data.js"
 import {emptyTile, initTileMap, TileMap} from "../Furca/src/tile_map.js"
-import {Align, apsk, defaultCanvas, defaultFontSize} from "../Furca/src/system.js"
+import {Align, apsk, defaultCanvas, defaultFontSize, loc} from "../Furca/src/system.js"
 import {clamp, floor, rndi} from "../Furca/src/functions.js"
 import {keys} from "../Furca/src/key.js"
 import {moveDown, moveLeft, moveRight, pause, turnClockwise, turnCounterclockwise} from "./keys.js"
@@ -15,6 +15,7 @@ import {Box} from "../Furca/src/box.js"
 import {checkLines} from "./line_clear.js"
 import {Delayed} from "./delayed.js"
 import {selectShape} from "./select_shape.js"
+import "./text.js"
 
 project.getAssets = () => {
     return {
@@ -37,7 +38,7 @@ export function newShape() {
     shapeRow = 0
     shapeColor = 16 * (rndi(5) + 1)
     if(collision(0, 0, 0)) {
-        alert("GAME OVER!")
+        alert(loc("gameOver"))
         field.clear()
         tileMap.field.pasteTo(field)
         score.value = 0
@@ -64,9 +65,9 @@ export function incrementRow() {
 }
 
 project.init = () => {
-    const scoreLabel = new Label(new Box(0, 0, 12, 20), ["SCORE: ", score]
+    const scoreLabel = new Label(new Box(0, 0, 12, 20), [loc("score"), score]
         , defaultFontSize, Align.center, Align.top)
-    const pauseLabel = new Label(new Box(0, 0, 12, 20), ["PAUSED"]
+    const pauseLabel = new Label(new Box(0, 0, 12, 20), [loc("paused")]
         , defaultFontSize, Align.center, Align.center)
     pauseLabel.visible = false
 
